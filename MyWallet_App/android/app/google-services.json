@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "964589519703",
+    "project_id": "fir-notesapp-b071e",
+    "storage_bucket": "fir-notesapp-b071e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964589519703:android:e6facadc2d8dc4fe817412",
+        "android_client_info": {
+          "package_name": "com.example.firebase_notes_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzoc7NUhJ43TMYxEuNrKODc_nSof6hNRI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964589519703:android:c9b1cd4cf36d1c9f817412",
+        "android_client_info": {
+          "package_name": "com.nktkln.mywallet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzoc7NUhJ43TMYxEuNrKODc_nSof6hNRI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964589519703:android:d22d270c61f6b4c2817412",
+        "android_client_info": {
+          "package_name": "com.nktkln.mywallet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzoc7NUhJ43TMYxEuNrKODc_nSof6hNRI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
