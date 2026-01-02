@@ -10,8 +10,8 @@ const char* password = "WIFI_PASSWORD";
 #define BOT_TOKEN "BOT_TOKEN"
 
 /* Telegram chat and topic */
-#define CHAT_ID   "2075131720"
-#define TOPIC_ID  2761   // message_thread_id
+#define CHAT_ID   CHAT_ID
+#define TOPIC_ID  1   // message_thread_id
 
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOT_TOKEN, client);
