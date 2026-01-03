@@ -1,86 +1,173 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
+#include <time.h>
 
-/* WiFi credentials */
-const char* ssid = "WIFI_NAME";
-const char* password = "WIFI_PASSWORD";
+/* ================= CONFIG ================= */
 
-/* Telegram bot token */
+#define WIFI_SSID     "WIFI_SSID"
+#define WIFI_PASSWORD "WIFI_PASSWORD"
+
 #define BOT_TOKEN "BOT_TOKEN"
+#define CHAT_ID   "CHAT_ID"
 
-/* Telegram chat and topic */
-#define CHAT_ID   CHAT_ID
-#define TOPIC_ID  1   // message_thread_id
+#define PWR_PIN 0        // ESP-01 GPIO0 (active LOW)
+#define BOT_MTBS 1000
 
-WiFiClientSecure client;
-UniversalTelegramBot bot(BOT_TOKEN, client);
+/* ========================================= */
 
-/* ESP-01 GPIO */
-#define PWR_PIN 2   // GPIO2
-
-/* Relay logic (active LOW) */
 const int RELAY_ON  = LOW;
 const int RELAY_OFF = HIGH;
 
-/* Simulate power button press */
-void pressPower(int durationMs) {
+WiFiClientSecure client;
+UniversalTelegramBot bot(BOT_TOKEN, client);
+unsigned long bot_lasttime;
+
+/* ================= POWER ================= */
+
+void pressPower(uint32_t durationMs)
+{
+  Serial.print("[ACTION] Power press ");
+  Serial.print(durationMs);
+  Serial.println(" ms");
+
   digitalWrite(PWR_PIN, RELAY_ON);
   delay(durationMs);
   digitalWrite(PWR_PIN, RELAY_OFF);
+
+  Serial.println("[ACTION] Power released");
 }
 
-/* Send message to specific topic */
-void sendMessage(const String& text) {
-  bot.sendMessage(CHAT_ID, text, "", TOPIC_ID);
+/* ================= TELEGRAM ================= */
+
+void sendMessage(const String &text)
+{
+  Serial.print("[TELEGRAM] Send: ");
+  Serial.println(text);
+
+  if (!bot.sendMessage(CHAT_ID, text, ""))
+    Serial.println("[ERROR] sendMessage failed");
 }
 
-void setup() {
-  /* IMPORTANT: set output level before pinMode */
+void sendCommandsMenu()
+{
+  String menu =
+    "⚙️ *Power control commands*\n\n"
+    "⏺ Short power press: /pressbutton\n\n"
+    "🔄 Reboot server: /reboot\n\n"
+    "🔴 Force power OFF: /forcestop\n\n"
+    "ℹ️ Show this menu: /commands";
+
+  if (!bot.sendMessage(CHAT_ID, menu, "Markdown"))
+    Serial.println("[ERROR] sendCommandsMenu failed");
+}
+
+/* ================= HANDLERS ================= */
+
+void handleCommand(const String &cmd)
+{
+  Serial.print("[CMD] ");
+  Serial.println(cmd);
+
+  if (cmd == "/start" || cmd == "/commands")
+  {
+    sendCommandsMenu();
+  }
+  else if (cmd == "/pressbutton")
+  {
+    pressPower(700);
+    sendMessage("⏺ Power button pressed");
+  }
+  else if (cmd == "/forcestop")
+  {
+    pressPower(6000);
+    sendMessage("🔴 Forced power off");
+  }
+  else if (cmd == "/reboot")
+  {
+    Serial.println("[ACTION] Reboot sequence");
+    pressPower(6000);
+    delay(3000);
+    pressPower(700);
+    sendMessage("🔄 Reboot completed");
+  }
+  else
+  {
+    Serial.println("[WARN] Unknown command");
+  }
+}
+
+/* ================= UPDATE LOOP ================= */
+
+void handleNewMessages(int count)
+{
+  Serial.print("[TELEGRAM] New messages: ");
+  Serial.println(count);
+
+  for (int i = 0; i < count; i++)
+  {
+    String chatId = bot.messages[i].chat_id;
+    String text   = bot.messages[i].text;
+
+    if (chatId != CHAT_ID)
+    {
+      Serial.println("[WARN] Unauthorized chat ignored");
+      continue;
+    }
+
+    handleCommand(text);
+  }
+}
+
+/* ================= SETUP ================= */
+
+void setup()
+{
+  Serial.begin(115200);
+  Serial.println();
+  Serial.println("[BOOT] ESP-01 power bot");
+
   digitalWrite(PWR_PIN, RELAY_OFF);
   pinMode(PWR_PIN, OUTPUT);
 
-  WiFi.begin(ssid, password);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   client.setInsecure();
 
-  while (WiFi.status() != WL_CONNECTED) {
+  Serial.print("[WIFI] Connecting");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print(".");
     delay(500);
   }
 
-  sendMessage("🟢 Power switch online.");
-}
+  Serial.println();
+  Serial.print("[WIFI] IP: ");
+  Serial.println(WiFi.localIP());
 
-void loop() {
-  int messageCount = bot.getUpdates(bot.last_message_received + 1);
-
-  while (messageCount) {
-    for (int i = 0; i < messageCount; i++) {
-
-      /* Security: allow only one chat */
-      if (bot.messages[i].chat_id != CHAT_ID) continue;
-
-      String cmd = bot.messages[i].text;
-
-      if (cmd == "pressbutton") {
-        pressPower(700);
-        sendMessage("⏺️ Power button pressed (short)");
-      }
-
-      else if (cmd == "forcestop") {
-        pressPower(6000);
-        sendMessage("🔴 Forced power off");
-      }
-
-      else if (cmd == "reboot") {
-        pressPower(6000);
-        delay(3000);
-        pressPower(700);
-        sendMessage("🔄 Reboot completed (power cycle)");
-      }
-    }
-
-    messageCount = bot.getUpdates(bot.last_message_received + 1);
+  // Telegram HTTPS requires correct time
+  configTime(0, 0, "pool.ntp.org");
+  time_t now = time(nullptr);
+  while (now < 24 * 3600)
+  {
+    delay(100);
+    now = time(nullptr);
   }
 
-  delay(800);
+  sendMessage("🟢 Power switch online");
+}
+
+/* ================= LOOP ================= */
+
+void loop()
+{
+  if (millis() - bot_lasttime > BOT_MTBS)
+  {
+    int n = bot.getUpdates(bot.last_message_received + 1);
+    while (n)
+    {
+      handleNewMessages(n);
+      n = bot.getUpdates(bot.last_message_received + 1);
+    }
+    bot_lasttime = millis();
+  }
 }
