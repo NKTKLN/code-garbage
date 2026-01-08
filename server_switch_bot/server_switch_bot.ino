@@ -127,8 +127,8 @@ void setup()
   Serial.println();
   Serial.println("[BOOT] ESP-01 power bot");
 
-  digitalWrite(PWR_PIN, RELAY_OFF);
   pinMode(PWR_PIN, OUTPUT);
+  digitalWrite(PWR_PIN, RELAY_OFF);
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   client.setInsecure();
