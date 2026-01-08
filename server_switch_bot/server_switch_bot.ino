@@ -16,8 +16,8 @@
 
 /* ========================================= */
 
-const int RELAY_ON  = HIGH;
-const int RELAY_OFF = LOW;
+const int RELAY_ON  = LOW;
+const int RELAY_OFF = HIGH;
 
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOT_TOKEN, client);
