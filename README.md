@@ -27,4 +27,3 @@ You might encounter:
 ## 📜 License
 
 Licensed under the **MIT License**. See the [LICENSE](./LICENSE.md) file for details.
-pair test
