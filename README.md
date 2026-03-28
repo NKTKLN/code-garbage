@@ -24,8 +24,6 @@ You might encounter:
 * broken refactors
 * “temporary” solutions that became permanent
 
-> test
-
 ## 📜 License
 
 Licensed under the **MIT License**. See the [LICENSE](./LICENSE.md) file for details.
